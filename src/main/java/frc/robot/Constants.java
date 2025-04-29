@@ -4,7 +4,15 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.util.Color;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -21,6 +29,16 @@ public final class Constants {
 
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
+  }
+
+    public static final class LEDConstants {
+    public static final int PORT = 5;
+    public static final int LEGNTH = 20;    
+    public static final Color BASIC_COLOR = Color.kOrange;
+    public static final Color ALIGNMENT_COLOR = Color.kOrange;
+    public static final Distance SPACING = Meters.of(1 / 120.0);
+    public static final LinearVelocity SCROLL_SPEED = MetersPerSecond.of(1);
+    public static final Time BREATHE_TIME = Seconds.of(2);
   }
 
   public static class OperatorConstants {
