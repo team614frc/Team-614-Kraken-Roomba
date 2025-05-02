@@ -33,11 +33,11 @@ public final class Constants {
 
   public static final class LEDConstants {
     public static final int PORT = 6;
-    public static final int LEGNTH = 20;
-    public static final Color BASIC_COLOR = Color.kOrange;
-    public static final Color ALIGNMENT_COLOR = Color.kOrange;
+    public static final int LEGNTH = 10;
+    public static final Color BASIC_COLOR = new Color(101, 255 , 1); //red is green, green is red, blue is blue  
+    public static final Color ALIGNMENT_COLOR = new Color(248, 31 , 9); //red is green, green is red, blue is blue  
     public static final Distance SPACING = Meters.of(1 / 120.0);
-    public static final LinearVelocity SCROLL_SPEED = MetersPerSecond.of(1);
+    public static final LinearVelocity SCROLL_SPEED = MetersPerSecond.of(.1);
     public static final Time BREATHE_TIME = Seconds.of(2);
   }
 
