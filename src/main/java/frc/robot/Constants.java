@@ -31,9 +31,9 @@ public final class Constants {
     public static final double WHEEL_LOCK_TIME = 10; // seconds
   }
 
-    public static final class LEDConstants {
-    public static final int PORT = 5;
-    public static final int LEGNTH = 20;    
+  public static final class LEDConstants {
+    public static final int PORT = 6;
+    public static final int LEGNTH = 20;
     public static final Color BASIC_COLOR = Color.kOrange;
     public static final Color ALIGNMENT_COLOR = Color.kOrange;
     public static final Distance SPACING = Meters.of(1 / 120.0);

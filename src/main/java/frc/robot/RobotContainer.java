@@ -6,15 +6,10 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.SwerveSubsystem;
-import java.io.File;
-import swervelib.SwerveInputStream;
+import frc.robot.subsystems.LEDSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -26,33 +21,35 @@ public class RobotContainer {
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController driverXbox = new CommandXboxController(0);
+  LEDSubsystem ledSubsystem = new LEDSubsystem();
+
   // The robot's subsystems and commands are defined here...
-  private final SwerveSubsystem drivebase =
-      new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
+  // private final SwerveSubsystem drivebase =
+  //     new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular
    * velocity.
    */
-  SwerveInputStream driveAngularVelocity =
-      SwerveInputStream.of(
-              drivebase.getSwerveDrive(),
-              () -> -driverXbox.getLeftY(),
-              () -> -driverXbox.getLeftX())
-          .withControllerRotationAxis(driverXbox::getRightX)
-          .deadband(OperatorConstants.DEADBAND)
-          .scaleTranslation(0.8)
-          .allianceRelativeControl(true);
+  // SwerveInputStream driveAngularVelocity =
+  //     SwerveInputStream.of(
+  //             drivebase.getSwerveDrive(),
+  //             () -> -driverXbox.getLeftY(),
+  //             () -> -driverXbox.getLeftX())
+  //         .withControllerRotationAxis(driverXbox::getRightX)
+  //         .deadband(OperatorConstants.DEADBAND)
+  //         .scaleTranslation(0.8)
+  //         .allianceRelativeControl(true);
 
-  SwerveInputStream driveAngularVelocityKeyboard =
-      SwerveInputStream.of(
-              drivebase.getSwerveDrive(),
-              () -> -driverXbox.getLeftY(),
-              () -> -driverXbox.getLeftX())
-          .withControllerRotationAxis(() -> driverXbox.getRawAxis(2))
-          .deadband(OperatorConstants.DEADBAND)
-          .scaleTranslation(0.8)
-          .allianceRelativeControl(true);
+  // SwerveInputStream driveAngularVelocityKeyboard =
+  //     SwerveInputStream.of(
+  //             drivebase.getSwerveDrive(),
+  //             () -> -driverXbox.getLeftY(),
+  //             () -> -driverXbox.getLeftX())
+  //         .withControllerRotationAxis(() -> driverXbox.getRawAxis(2))
+  //         .deadband(OperatorConstants.DEADBAND)
+  //         .scaleTranslation(0.8)
+  //         .allianceRelativeControl(true);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -72,11 +69,12 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+    // Command driveFieldOrientedAnglularVelocity =
+    // drivebase.driveFieldOriented(driveAngularVelocity);
 
-    drivebase.setDefaultCommand(
-        driveFieldOrientedAnglularVelocity); // Overrides drive command above!
-    driverXbox.start().onTrue((Commands.runOnce(drivebase::zeroGyro)));
+    // drivebase.setDefaultCommand(
+    //     driveFieldOrientedAnglularVelocity); // Overrides drive command above!
+    // driverXbox.start().onTrue((Commands.runOnce(drivebase::zeroGyro)));
     driverXbox.leftBumper().onTrue(Commands.none());
     driverXbox.rightBumper().onTrue(Commands.none());
   }
@@ -86,12 +84,12 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
-  }
+  // public Command getAutonomousCommand() {
+  //   // An example command will be run in autonomous
+  //   return drivebase.getAutonomousCommand("New Auto");
+  // }
 
-  public void setMotorBrake(boolean brake) {
-    drivebase.setMotorBrake(brake);
-  }
+  // public void setMotorBrake(boolean brake) {
+  //   drivebase.setMotorBrake(brake);
+  // }
 }

@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Meters;
-
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.LEDPattern;
@@ -24,7 +22,7 @@ public class LEDSubsystem extends SubsystemBase {
     led.setLength(buffer.getLength());
     led.setData(buffer);
     led.start();
-
+    setBasicPattern();
     // Set the default command to turn the strip off, otherwise the last colors written by
     // the last command to run will continue to be displayed.
     // Note: Other default patterns could be used instead!
@@ -48,7 +46,7 @@ public class LEDSubsystem extends SubsystemBase {
 
   public Command setBasicPattern() {
     LEDPattern pattern;
-      pattern = LEDPattern.solid(Constants.LEDConstants.BASIC_COLOR);
+    pattern = LEDPattern.solid(Constants.LEDConstants.BASIC_COLOR);
     return runPattern(pattern);
   }
 
