@@ -26,7 +26,8 @@ public class LEDSubsystem extends SubsystemBase {
     // Set the default command to turn the strip off, otherwise the last colors written by
     // the last command to run will continue to be displayed.
     // Note: Other default patterns could be used instead!
-    setDefaultCommand(setAlignmentPattern());
+    setBasicPattern();
+    setDefaultCommand(setBasicPattern());
   }
 
   @Override
