@@ -12,6 +12,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -23,12 +25,15 @@ import swervelib.SwerveInputStream;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController driverXbox = new CommandXboxController(0);
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem drivebase =
       new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
+
+  private final IntakeSubsystem intake = new IntakeSubsystem();
+  private final PivotSubsystem pivot = new PivotSubsystem();
+
+  // Replace with CommandPS4Controller or CommandJoystick if needed
+  private final CommandXboxController driverXbox = new CommandXboxController(0);
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular
@@ -77,8 +82,12 @@ public class RobotContainer {
     drivebase.setDefaultCommand(
         driveFieldOrientedAnglularVelocity); // Overrides drive command above!
     driverXbox.start().onTrue((Commands.runOnce(drivebase::zeroGyro)));
-    driverXbox.leftBumper().onTrue(Commands.none());
-    driverXbox.rightBumper().onTrue(Commands.none());
+    driverXbox.leftBumper().whileTrue(intake.scoreLow());
+    driverXbox.rightBumper().whileTrue(intake.scoreMid());
+    driverXbox.leftTrigger().whileTrue(intake.intake());
+    driverXbox.rightTrigger().whileTrue(intake.scoreHigh());
+    driverXbox.a().onTrue(pivot.pivotDown());
+    driverXbox.x().onTrue(pivot.pivotUp());
   }
 
   /**
