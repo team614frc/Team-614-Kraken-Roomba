@@ -24,10 +24,6 @@ public class IntakeSubsystem extends SubsystemBase {
         PersistMode.kPersistParameters);
   }
 
-  public SparkFlex getMotor() {
-    return intakeMotor;
-  }
-
   @Override
   public void periodic() {}
 
@@ -45,17 +41,35 @@ public class IntakeSubsystem extends SubsystemBase {
         });
   }
 
-  public Command outtake() {
+  public Command scoreLow() {
     return this.runEnd(
         () -> {
-          set(IntakeConstants.OUTTAKE_SPEED);
+          set(IntakeConstants.LOW_SPEED);
         },
         () -> {
           set(IntakeConstants.OUTTAKE_REST_SPEED);
         });
   }
 
-  // hasGamepiece method
+  public Command scoreMid() {
+    return this.runEnd(
+        () -> {
+          set(IntakeConstants.MID_SPEED);
+        },
+        () -> {
+          set(IntakeConstants.OUTTAKE_REST_SPEED);
+        });
+  }
+
+  public Command scoreHigh() {
+    return this.runEnd(
+        () -> {
+          set(IntakeConstants.HIGH_SPEED);
+        },
+        () -> {
+          set(IntakeConstants.OUTTAKE_REST_SPEED);
+        });
+  }
 
   public Command stopIntake() {
     return this.runOnce(() -> set(IntakeConstants.INTAKE_REST_SPEED));

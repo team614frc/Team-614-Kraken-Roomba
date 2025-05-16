@@ -13,7 +13,7 @@ public final class Configs {
     static {
       INTAKE_CONFIG
           .idleMode(IdleMode.kBrake)
-          .inverted(true)
+          .inverted(false)
           .smartCurrentLimit((int) Constants.IntakeConstants.INTAKE_CURRENT_LIMIT.in(Amp));
     }
   }
@@ -24,8 +24,8 @@ public final class Configs {
     static {
       PIVOT_CONFIG
           .idleMode(IdleMode.kBrake)
-          .inverted(true)
-          .smartCurrentLimit((int) Constants.IntakeConstants.INTAKE_PIVOT_CURRENT_LIMIT.in(Amp));
+          .inverted(false)
+          .smartCurrentLimit((int) Constants.PivotConstants.PIVOT_CURRENT_LIMIT.in(Amp));
     }
   }
 }

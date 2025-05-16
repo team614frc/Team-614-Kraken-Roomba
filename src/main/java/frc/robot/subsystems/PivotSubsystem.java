@@ -5,10 +5,9 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.Rotation;
 import static edu.wpi.first.units.Units.Rotations;
 
-import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
@@ -27,7 +26,7 @@ import frc.robot.Constants.PivotConstants.PivotSetpoint;
 public class PivotSubsystem extends SubsystemBase {
   private final SparkFlex pivotMotor =
       new SparkFlex(PivotConstants.PIVOT_MOTOR, MotorType.kBrushless);
-  private AbsoluteEncoder pivotEncoder = pivotMotor.getAbsoluteEncoder();
+  private RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
   private PivotSetpoint pivotSetpoint = PivotSetpoint.PIVOT_IDLE;
 
   private final ProfiledPIDController pid =
@@ -41,10 +40,10 @@ public class PivotSubsystem extends SubsystemBase {
 
   private final ArmFeedforward feedforward =
       new ArmFeedforward(
-        PivotConstants.PIVOT_kS,
-        PivotConstants.PIVOT_kG,
-        PivotConstants.PIVOT_kV,
-        PivotConstants.PIVOT_kA);
+          PivotConstants.PIVOT_kS,
+          PivotConstants.PIVOT_kG,
+          PivotConstants.PIVOT_kV,
+          PivotConstants.PIVOT_kA);
 
   public PivotSubsystem() {
     pivotMotor.configure(
@@ -69,8 +68,7 @@ public class PivotSubsystem extends SubsystemBase {
                 - Units.rotationsToRadians(PivotConstants.PIVOT_FEEDFORWARD_OFFSET),
             pid.getSetpoint().velocity);
 
-    double ArmPidOutput =
-        pid.calculate(getPivotAngleRadians(), pivotSetpoint.value.in(Radians));
+    double ArmPidOutput = pid.calculate(getPivotAngleRadians(), pivotSetpoint.value.in(Radians));
 
     pivotMotor.setVoltage(ArmPidOutput + armFeedforwardVoltage);
   }
