@@ -150,3 +150,7 @@ spotless {
         endWithNewline()
     }
 }
+
+tasks.named("deploy") {
+    dependsOn "spotlessApply"
+}
