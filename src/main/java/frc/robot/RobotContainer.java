@@ -44,7 +44,7 @@ public class RobotContainer {
               drivebase.getSwerveDrive(),
               () -> -driverXbox.getLeftY(),
               () -> -driverXbox.getLeftX())
-          .withControllerRotationAxis(driverXbox::getRightX)
+          .withControllerRotationAxis(() -> -driverXbox.getRightX())
           .deadband(OperatorConstants.DEADBAND)
           .scaleTranslation(0.8)
           .allianceRelativeControl(true);
@@ -82,12 +82,15 @@ public class RobotContainer {
     drivebase.setDefaultCommand(
         driveFieldOrientedAnglularVelocity); // Overrides drive command above!
     driverXbox.start().onTrue((Commands.runOnce(drivebase::zeroGyro)));
+    driverXbox.back().whileTrue(pivot.zeroPivot());
     driverXbox.leftBumper().whileTrue(intake.scoreLow());
     driverXbox.rightBumper().whileTrue(intake.scoreMid());
     driverXbox.leftTrigger().whileTrue(intake.intake());
     driverXbox.rightTrigger().whileTrue(intake.scoreHigh());
     driverXbox.a().onTrue(pivot.pivotDown());
-    driverXbox.x().onTrue(pivot.pivotUp());
+    driverXbox.y().onTrue(pivot.pivotUp());
+    driverXbox.x().onTrue(pivot.pivotMid());
+    driverXbox.b().whileTrue(intake.algaeIntake());
   }
 
   /**
@@ -102,5 +105,9 @@ public class RobotContainer {
 
   public void setMotorBrake(boolean brake) {
     drivebase.setMotorBrake(brake);
+  }
+
+  public void holdCurrentPosition() {
+    pivot.holdCurrentPosition(); // Prevent slamming
   }
 }

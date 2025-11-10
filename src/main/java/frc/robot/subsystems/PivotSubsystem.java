@@ -81,10 +81,23 @@ public class PivotSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Pivot Position", pivotEncoder.getPosition());
   }
 
+  public void holdCurrentPosition() {
+    double currentRad = pivotEncoder.getPosition();
+    pid.reset(currentRad);
+    pid.setGoal(currentRad);
+  }
+
   public Command pivotDown() {
     return this.runOnce(
         () -> {
           pivotSetpoint = PivotSetpoint.PIVOT_DOWN;
+        });
+  }
+
+  public Command pivotMid() {
+    return this.runOnce(
+        () -> {
+          pivotSetpoint = PivotSetpoint.PIVOT_MID;
         });
   }
 
@@ -100,5 +113,28 @@ public class PivotSubsystem extends SubsystemBase {
         () -> {
           pivotSetpoint = PivotSetpoint.PIVOT_UP;
         });
+  }
+
+  public Command zeroPivot() {
+    return this.runEnd(
+            () -> {
+              // Disable PID temporarily
+              pivotSetpoint = PivotSetpoint.PIVOT_UP;
+              pid.reset(getPivotAngleRadians()); // Reset PID state
+
+              // Run the motor slowly towards the hard stop
+              pivotMotor.set(-0.05); // Tune speed direction and magnitude as needed
+            },
+            () -> {
+              // Once interrupted or ended, stop motor
+              pivotMotor.set(0);
+            })
+        .until(() -> Math.abs(pivotEncoder.getVelocity()) < 0.3) // Stall condition
+        .andThen(
+            () -> {
+              pivotMotor.set(0); // Ensure motor is stopped
+              pivotEncoder.setPosition(0); // Reset encoder to 0
+              holdCurrentPosition(); // Resume PID holding current position
+            });
   }
 }
