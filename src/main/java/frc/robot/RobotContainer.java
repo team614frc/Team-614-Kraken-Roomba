@@ -79,8 +79,7 @@ public class RobotContainer {
   private void configureBindings() {
     Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
 
-    drivebase.setDefaultCommand(
-        driveFieldOrientedAnglularVelocity); // Overrides drive command above!
+    drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
     driverXbox.start().onTrue((Commands.runOnce(drivebase::zeroGyro)));
     driverXbox.back().whileTrue(pivot.zeroPivot());
     driverXbox.leftBumper().whileTrue(intake.scoreLow());
