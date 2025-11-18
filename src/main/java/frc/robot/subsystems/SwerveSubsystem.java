@@ -40,12 +40,14 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param directory Directory of swerve drive config files.
    */
   public SwerveSubsystem(File directory) {
-    // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects being
+    // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
+    // objects being
     // created.
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
     try {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(DrivebaseConstants.MAX_SPEED);
-      // Alternative method if you don't want to supply the conversion factor via JSON files.
+      // Alternative method if you don't want to supply the conversion factor via JSON
+      // files.
       // swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed,
       // angleConversionFactor, driveConversionFactor);
     } catch (Exception e) {
@@ -106,10 +108,12 @@ public class SwerveSubsystem extends SubsystemBase {
               swerveDrive.setChassisSpeeds(speedsRobotRelative);
             }
           },
-          // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally
+          // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also
+          // optionally
           // outputs individual module feedforwards
           new PPHolonomicDriveController(
-              // PPHolonomicController is the built in path following controller for holonomic drive
+              // PPHolonomicController is the built in path following controller for holonomic
+              // drive
               // trains
               new PIDConstants(5.0, 0.0, 0.0),
               // Translation PID constants
@@ -119,7 +123,8 @@ public class SwerveSubsystem extends SubsystemBase {
           config,
           // The robot configuration
           () -> {
-            // Boolean supplier that controls when the path will be mirrored for the red alliance
+            // Boolean supplier that controls when the path will be mirrored for the red
+            // alliance
             // This will flip the path being followed to the red side of the field.
             // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
@@ -150,7 +155,8 @@ public class SwerveSubsystem extends SubsystemBase {
    * @return {@link AutoBuilder#followPath(PathPlannerPath)} path command.
    */
   public Command getAutonomousCommand(String pathName) {
-    // Create a path following command using AutoBuilder. This will also trigger event markers.
+    // Create a path following command using AutoBuilder. This will also trigger
+    // event markers.
     return new PathPlannerAuto(pathName);
   }
 
@@ -238,5 +244,16 @@ public class SwerveSubsystem extends SubsystemBase {
    */
   public SwerveDrive getSwerveDrive() {
     return swerveDrive;
+  }
+
+  /** Returns the maximum linear speed in meters per second. */
+  public double getMaxSpeed() {
+    return DrivebaseConstants.MAX_SPEED; // whatever your max speed constant is
+  }
+
+  /** Returns the maximum angular speed in radians per second. */
+  public double getMaxAngularSpeed() {
+    // You need to define this constant somewhere (tune for your robot)
+    return DrivebaseConstants.MAX_ANGULAR_SPEED_RAD_PER_SEC;
   }
 }
