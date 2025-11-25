@@ -256,4 +256,10 @@ public class SwerveSubsystem extends SubsystemBase {
     // You need to define this constant somewhere (tune for your robot)
     return DrivebaseConstants.MAX_ANGULAR_SPEED_RAD_PER_SEC;
   }
+
+  /** Smoothly correct odometry with vision (avoids jumps) */
+  public void addVisionMeasurement(Pose2d visionPose, double timestampSeconds) {
+    // YAGSL method: updates internal pose estimator with vision measurement
+    swerveDrive.addVisionMeasurement(visionPose, timestampSeconds);
+  }
 }

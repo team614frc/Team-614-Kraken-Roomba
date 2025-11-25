@@ -7,7 +7,6 @@ import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -19,7 +18,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -56,8 +54,8 @@ public class VisionSubsystem extends SubsystemBase {
   // Gains for alignment (unchanged)
   private static final double TRANSLATION_KP = 2.0;
   private static final double ROTATION_KP = 1.75;
-  private static final double MAX_LINEAR_SPEED_MPS = 1.65;
-  private static final double MAX_ANGULAR_SPEED_RAD_PER_SEC = 3.15;
+  private static final double MAX_LINEAR_SPEED_MPS = 2.65; // 1.65
+  private static final double MAX_ANGULAR_SPEED_RAD_PER_SEC = 3.5; // 3.15
 
   private static final double TAG_STANDOFF_METERS = 0.4375; // .45
   private static final double POSITION_TOLERANCE_METERS = 0.05;
@@ -98,14 +96,17 @@ public class VisionSubsystem extends SubsystemBase {
             new Rotation3d(0.0, 0.0, 0.0));
 
     // Create photon pose estimator per javadoc signature:
-    // PhotonPoseEstimator(AprilTagFieldLayout fieldTags, PoseStrategy strategy, Transform3d
+    // PhotonPoseEstimator(AprilTagFieldLayout fieldTags, PoseStrategy strategy,
+    // Transform3d
     // robotToCamera)
     if (fieldLayout != null) {
       poseEstimator =
           new PhotonPoseEstimator(
               fieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCamera);
-      // optional: configure fallback strategy e.g.
-      // poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+
+      // BEST fallback for accuracy
+      poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+
     } else {
       // if layout not available, don't create estimator
       // set a dummy (null) and guard usage below
@@ -148,131 +149,38 @@ public class VisionSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Keep sim behaviour (unchanged)
-    if (simEnabled && visionSim != null && drivebase != null) {
+    // Update simulation if needed
+    if (simEnabled && visionSim != null) {
       Pose2d pose2d = drivebase.getPose();
-      if (pose2d != null) {
-        visionSim.update(pose2d);
-      }
+      if (pose2d != null) visionSim.update(pose2d);
     }
 
-    // --- Photon pose estimation loop, following Photon docs/javadoc ---
-    // Process unread results (docs recommend iterating over unread results to avoid stale frames).
-    try {
-      List<PhotonPipelineResult> unread = camera.getAllUnreadResults(); // javadoc: exists
-      if (unread != null && !unread.isEmpty()) {
-        for (PhotonPipelineResult change : unread) {
-          // Update estimator using this pipeline result
-          Optional<EstimatedRobotPose> maybeEst = poseEstimator.update(change);
-          maybeEst.ifPresent(
-              est -> {
-                Pose3d estPose3d = est.estimatedPose;
-                Pose2d estPose2d = estPose3d.toPose2d();
-                double ts = est.timestampSeconds;
+    // Process latest vision results
+    List<PhotonPipelineResult> results = camera.getAllUnreadResults();
+    results.add(camera.getLatestResult()); // include latest if none unread
 
-                // store last estimate
-                lastEstimatedPose = Optional.of(estPose2d);
-                lastEstimatedTimestamp = ts;
+    for (PhotonPipelineResult result : results) {
+      if (result.hasTargets()) {
+        Optional<EstimatedRobotPose> maybeEst = poseEstimator.update(result);
+        maybeEst.ifPresent(
+            est -> {
+              Pose2d est2d = est.estimatedPose.toPose2d();
+              lastEstimatedPose = Optional.of(est2d);
+              lastEstimatedTimestamp = est.timestampSeconds;
 
-                // publish
-                SmartDashboard.putBoolean("Vision/HasPose", true);
-                SmartDashboard.putNumber("Vision/PoseX", estPose2d.getX());
-                SmartDashboard.putNumber("Vision/PoseY", estPose2d.getY());
-                SmartDashboard.putNumber("Vision/PoseRotDeg", estPose2d.getRotation().getDegrees());
-                SmartDashboard.putNumber("Vision/Timestamp", ts);
+              SmartDashboard.putBoolean("Vision/HasPose", true);
+              SmartDashboard.putNumber("Vision/PoseX", est2d.getX());
+              SmartDashboard.putNumber("Vision/PoseY", est2d.getY());
+              SmartDashboard.putNumber("Vision/PoseRotDeg", est2d.getRotation().getDegrees());
+              SmartDashboard.putNumber("Vision/Timestamp", est.timestampSeconds);
 
-                // Try to apply it to drivebase using reflection (safe: compiles even if your swerve
-                // doesn't have the setter)
-                tryApplyPoseToDrivebase(estPose2d, ts);
-              });
-
-          if (maybeEst.isEmpty()) {
-            // clear debug if needed
-            SmartDashboard.putBoolean("Vision/HasPose", false);
-          }
-        }
-      } else {
-        // optionally try latest result too (if no unread results)
-        PhotonPipelineResult latest = camera.getLatestResult();
-        if (latest != null && latest.hasTargets()) {
-          Optional<EstimatedRobotPose> maybeEst = poseEstimator.update(latest);
-          maybeEst.ifPresent(
-              est -> {
-                Pose2d est2d = est.estimatedPose.toPose2d();
-                lastEstimatedPose = Optional.of(est2d);
-                lastEstimatedTimestamp = est.timestampSeconds;
-                SmartDashboard.putBoolean("Vision/HasPose", true);
-                SmartDashboard.putNumber("Vision/PoseX", est2d.getX());
-                SmartDashboard.putNumber("Vision/PoseY", est2d.getY());
-                SmartDashboard.putNumber("Vision/PoseRotDeg", est2d.getRotation().getDegrees());
-                SmartDashboard.putNumber("Vision/Timestamp", est.timestampSeconds);
-                tryApplyPoseToDrivebase(est2d, est.timestampSeconds);
-              });
-        } else {
-          // no targets
-          SmartDashboard.putBoolean("Vision/HasPose", false);
-        }
-      }
-    } catch (Throwable t) {
-      // protect against Photon version differences / runtime errors
-      SmartDashboard.putBoolean("Vision/HasPose", false);
-      System.err.println("[Vision] pose estimator error: " + t.getMessage());
-    }
-  }
-
-  /**
-   * Attempt to call a common odometry/pose reset method on your SwerveSubsystem via reflection.
-   * This keeps this file compile-safe for teams whose SwerveSubsystem uses a different API.
-   *
-   * <p>Tries these method names (in order): - setPose(Pose2d) - resetPose(Pose2d) -
-   * resetOdometry(Pose2d) - resetRobotPose(Pose2d)
-   *
-   * <p>If none exist, no runtime exception is thrown; the estimated pose is still available via
-   * getEstimatedPose().
-   */
-  private void tryApplyPoseToDrivebase(Pose2d pose, double timestampSeconds) {
-    if (drivebase == null) return;
-
-    String[] candidateNames =
-        new String[] {"setPose", "resetPose", "resetOdometry", "resetRobotPose", "setOdometryPose"};
-
-    for (String name : candidateNames) {
-      try {
-        Method m = drivebase.getClass().getMethod(name, Pose2d.class);
-        if (m != null) {
-          m.invoke(drivebase, pose);
-          SmartDashboard.putString("Vision/AppliedToDrivebase", name);
-          return;
-        }
-      } catch (NoSuchMethodException nsme) {
-        // try next
-      } catch (Throwable ex) {
-        // any other exception while invoking
-        System.err.println("[Vision] failed applying pose via " + name + ": " + ex.getMessage());
-        // continue to other candidates
+              // --- Smoothly integrate vision into odometry ---
+              if (drivebase != null) {
+                drivebase.addVisionMeasurement(est2d, est.timestampSeconds);
+              }
+            });
       }
     }
-
-    // If nothing matched, optionally try methods that accept (Pose2d, double)
-    String[] candidateWithTs = new String[] {"setPose", "resetPose", "resetOdometry"};
-    for (String name : candidateWithTs) {
-      try {
-        Method m = drivebase.getClass().getMethod(name, Pose2d.class, double.class);
-        if (m != null) {
-          m.invoke(drivebase, pose, timestampSeconds);
-          SmartDashboard.putString("Vision/AppliedToDrivebase", name + "(pose,ts)");
-          return;
-        }
-      } catch (NoSuchMethodException nsme) {
-        // try next
-      } catch (Throwable ex) {
-        System.err.println(
-            "[Vision] failed applying pose via " + name + "(pose,ts): " + ex.getMessage());
-      }
-    }
-
-    // nothing invoked; leave it to callers to fetch getEstimatedPose()
-    SmartDashboard.putString("Vision/AppliedToDrivebase", "none");
   }
 
   /** Returns the last vision-estimated Pose2d (field-relative) if available. */
@@ -311,6 +219,7 @@ public class VisionSubsystem extends SubsystemBase {
     return this.run(
             () -> {
               Pose2d robotPose = drivebase.getPose();
+              @SuppressWarnings("unused")
               PhotonPipelineResult result = camera.getLatestResult();
               Optional<AprilTag> maybeTag = getNearestAllowedTag(robotPose);
 
