@@ -34,11 +34,10 @@ import org.photonvision.targeting.PhotonPipelineResult;
 /**
  * VisionSubsystem
  *
- * <p>- Keeps your alignment command intact - Uses PhotonPoseEstimator per Photon docs/javadocs:
+ * <p>- Keeps alignment command intact - Uses PhotonPoseEstimator per Photon docs/javadocs:
  * PhotonPoseEstimator(AprilTagFieldLayout, PoseStrategy, Transform3d) - Loops over
  * camera.getAllUnreadResults() and calls poseEstimator.update(result) - Stores latest Estimated
- * pose and timestamp; attempts to apply it to your SwerveSubsystem by reflection (safe: won't cause
- * compile-time errors if your SwerveSubsystem lacks a setter)
+ * pose and timestamp; attempts to apply it to your SwerveSubsystem by reflection
  */
 public class VisionSubsystem extends SubsystemBase {
   private static final String CAMERA_NAME = "spatulas_eye";
@@ -51,7 +50,7 @@ public class VisionSubsystem extends SubsystemBase {
 
   private final SwerveSubsystem drivebase;
 
-  // Gains for alignment (unchanged)
+  // Gains for alignment
   private static final double TRANSLATION_KP = 2.0;
   private static final double ROTATION_KP = 1.75;
   private static final double MAX_LINEAR_SPEED_MPS = 2.65; // 1.65
@@ -67,9 +66,7 @@ public class VisionSubsystem extends SubsystemBase {
   private final Set<Integer> allowedTagIDs =
       new HashSet<>(Set.of(6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22));
 
-  // -----------------------
   // Fields for PhotonPoseEstimator usage
-  // -----------------------
   private final Transform3d robotToCamera;
   private final PhotonPoseEstimator poseEstimator; // may be null if fieldLayout unavailable
 
@@ -88,7 +85,7 @@ public class VisionSubsystem extends SubsystemBase {
       fieldLayout = null;
     }
 
-    // Robot -> camera transform (meters / radians) - keep what you used previously
+    // Robot -> camera transform (meters / radians)
     robotToCamera =
         new Transform3d(
             new Translation3d(
@@ -115,7 +112,7 @@ public class VisionSubsystem extends SubsystemBase {
           "[VisionSubsystem] AprilTagFieldLayout required for pose estimator");
     }
 
-    // Simulation setup (kept intact)
+    // Simulation setup
     setupSimIfNeeded();
   }
 
@@ -127,7 +124,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     simEnabled = true;
 
-    // Sim camera properties (same as you used)
+    // Sim camera properties
     SimCameraProperties simProps = new SimCameraProperties();
     simProps.setCalibration(640, 480, Rotation2d.fromDegrees(70));
     simProps.setFPS(60);
@@ -174,7 +171,7 @@ public class VisionSubsystem extends SubsystemBase {
               SmartDashboard.putNumber("Vision/PoseRotDeg", est2d.getRotation().getDegrees());
               SmartDashboard.putNumber("Vision/Timestamp", est.timestampSeconds);
 
-              // --- Smoothly integrate vision into odometry ---
+              // integrate vision into odometry
               if (drivebase != null) {
                 drivebase.addVisionMeasurement(est2d, est.timestampSeconds);
               }
@@ -183,12 +180,12 @@ public class VisionSubsystem extends SubsystemBase {
     }
   }
 
-  /** Returns the last vision-estimated Pose2d (field-relative) if available. */
+  // Returns the last vision-estimated Pose2d (field-relative) if available
   public Optional<Pose2d> getEstimatedPose() {
     return lastEstimatedPose;
   }
 
-  /** Returns the timestamp (seconds) of the last estimate, or 0.0 if none. */
+  // Returns the timestamp (seconds) of the last estimate, or 0.0 if none.
   public double getEstimatedPoseTimestamp() {
     return lastEstimatedPose.isPresent() ? lastEstimatedTimestamp : 0.0;
   }
@@ -231,15 +228,15 @@ public class VisionSubsystem extends SubsystemBase {
               AprilTag tag = maybeTag.get();
               Pose2d tagPose = tag.pose.toPose2d();
 
-              // ✅ Rotate 180° so FRONT faces the tag (instead of back)
+              // Rotate 180° so FRONT faces the tag (instead of back)
               Rotation2d desiredHeading = tagPose.getRotation().plus(Rotation2d.fromDegrees(180));
 
-              // ✅ Offset now goes *forward* from tag
+              // Offset now goes *forward* from tag
               Translation2d offset =
                   new Translation2d(TAG_STANDOFF_METERS, 0).rotateBy(tagPose.getRotation());
               Pose2d targetPose = new Pose2d(tagPose.getTranslation().plus(offset), desiredHeading);
 
-              // === Compute errors ===
+              // Compute errors
               Translation2d error = targetPose.getTranslation().minus(robotPose.getTranslation());
               double dx = error.getX();
               double dy = error.getY();
@@ -247,7 +244,7 @@ public class VisionSubsystem extends SubsystemBase {
               double headingError = desiredHeading.minus(robotPose.getRotation()).getRadians();
               headingError = Math.atan2(Math.sin(headingError), Math.cos(headingError));
 
-              // === PID control ===
+              // PID control
               double vx = TRANSLATION_KP * dx;
               double vy = TRANSLATION_KP * dy;
               double omega = ROTATION_KP * headingError;
