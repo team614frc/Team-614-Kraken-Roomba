@@ -22,7 +22,8 @@ import edu.wpi.first.units.measure.Current;
 public final class Constants {
 
   public static final class DrivebaseConstants {
-    public static final double MAX_SPEED = Units.feetToMeters(6);
+    public static final double MAX_SPEED = Units.feetToMeters(14);
+    public static final double MAX_ANGULAR_SPEED_RAD_PER_SEC = Math.PI; // 180 deg/sec
   }
 
   public static class OperatorConstants {

@@ -4,9 +4,12 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -15,6 +18,7 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.PivotSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -31,6 +35,8 @@ public class RobotContainer {
 
   private final IntakeSubsystem intake = new IntakeSubsystem();
   private final PivotSubsystem pivot = new PivotSubsystem();
+  private final VisionSubsystem vision = new VisionSubsystem(drivebase);
+  private final SendableChooser<Command> autoChooser;
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController driverXbox = new CommandXboxController(0);
@@ -65,6 +71,9 @@ public class RobotContainer {
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+
+    autoChooser = AutoBuilder.buildAutoChooser("start");
+    SmartDashboard.putData("Auto Chooser", autoChooser);
   }
 
   /**
@@ -86,7 +95,8 @@ public class RobotContainer {
     driverXbox.rightBumper().whileTrue(intake.scoreMid());
     driverXbox.leftTrigger().whileTrue(intake.intake());
     driverXbox.rightTrigger().whileTrue(intake.scoreHigh());
-    driverXbox.a().onTrue(pivot.pivotDown());
+    // driverXbox.a().onTrue(pivot.pivotDown());
+    driverXbox.a().whileTrue(vision.driveAndAlignToNearestTag());
     driverXbox.y().onTrue(pivot.pivotUp());
     driverXbox.x().onTrue(pivot.pivotMid());
     driverXbox.b().whileTrue(intake.algaeIntake());
@@ -98,8 +108,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
+    return autoChooser.getSelected();
   }
 
   public void setMotorBrake(boolean brake) {
